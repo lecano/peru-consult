@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Administrador
@@ -64,6 +65,108 @@ class Ruc implements RucInterface
             'modo' => '1',
         ]);
 
-        return $html === false ? null : $this->parser->parse($html);
+        if ($html === false) {
+            return null;
+        }
+
+        if (strpos($html, 'Tipo Contribuyente') === false) {
+            return null;
+            //throw new \Exception('RUC no encontrado o no válido');
+        }
+
+        // Obtener datos adicionales
+        $data = $this->getAdditionalData($ruc);
+        if ($data === false) {
+            return null;
+        }
+
+        $dom = new \DOMDocument();
+        @$dom->loadHTML(utf8_encode($html));
+        //@$dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
+        $body = $dom->getElementsByTagName('body')->item(0);
+
+        /*
+        var_dump($dom->saveHTML());
+        exit();
+        */
+
+        if ($body) {
+            $extraDom = new \DOMDocument();
+            @$extraDom->loadHTML($data);
+            $extraBody = $extraDom->getElementsByTagName('body')->item(0);
+
+            if ($extraBody) {
+                foreach ($extraBody->childNodes as $node) {
+                    $body->appendChild($dom->importNode($node, true));
+                }
+            }
+        }
+
+        $combinedHtml = $dom->saveHTML();
+        return $this->parser->parse($combinedHtml);
+
+        //return $html === false ? null : $this->parser->parse($html);
+    }
+
+
+    /**
+     * Obtener datos adicionales.
+     *
+     * @param string $ruc
+     * @return string|false
+     */
+    private function getAdditionalData(string $ruc)
+    {
+        $data = [
+            'accion' => 'getCantTrab',
+            'nroRuc' => $ruc,
+            'contexto' => 'ti-it',
+            'modo' => '1',
+        ];
+        $htmlCantTrab = $this->client->post(Endpoints::CONSULT, http_build_query($data), [
+            'Content-Type' => 'application/x-www-form-urlencoded'
+        ]);
+
+        if ($htmlCantTrab === false) {
+            return false;
+        }
+
+        $dom = new \DOMDocument();
+        @$dom->loadHTML($htmlCantTrab);
+        $xpath = new \DOMXPath($dom);
+        $elements = $xpath->query("//div[contains(@class, 'table-responsive')]");
+
+        $extraHtml = '';
+        foreach ($elements as $element) {
+            $element->setAttribute('class', $element->getAttribute('class') . ' trabajadores');
+            $extraHtml .= $dom->saveHTML($element);
+        }
+
+        $data = [
+            'accion' => 'getRepLeg',
+            'contexto' => 'ti-it',
+            'modo' => '1',
+            'nroRuc' => $ruc,
+            'desRuc' => 'BVA FOODS',
+        ];
+        $htmlRepLeg = $this->client->post(Endpoints::CONSULT, http_build_query($data), [
+            'Content-Type' => 'application/x-www-form-urlencoded'
+        ]);
+
+        if ($htmlRepLeg === false) {
+            return false;
+        }
+
+        $dom = new \DOMDocument();
+        @$dom->loadHTML($htmlRepLeg);
+        $xpath = new \DOMXPath($dom);
+        $elements = $xpath->query("//div[contains(@class, 'table-responsive')]");
+
+        foreach ($elements as $element) {
+            $element->setAttribute('class', $element->getAttribute('class') . ' representantes');
+            $extraHtml .= $dom->saveHTML($element);
+        }
+
+        return utf8_decode($extraHtml);
     }
 }
