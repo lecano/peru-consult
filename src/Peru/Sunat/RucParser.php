@@ -44,6 +44,7 @@ class RucParser
 
             return null;
         }
+        //var_dump($dic);
 
         return $this->getCompany($dic);
     }
@@ -58,6 +59,7 @@ class RucParser
         $cp->sistEmsion = $items['Sistema Emisión de Comprobante:'] ?? $items['Sistema de Emisión de Comprobante:'] ?? '';
         $cp->sistContabilidad = $items['Sistema Contabilidiad:'] ?? $items['Sistema Contabilidad:'] ?? $items['Sistema de Contabilidad:'] ?? '';
         $cp->actExterior = $items['Actividad Comercio Exterior:'] ?? $items['Actividad de Comercio Exterior:'] ?? '';
+        $cp->fechaIniActividades = $this->parseDate($items['Fecha de Inicio de Actividades:'] ?? '');
         $cp->actEconomicas = $items['Actividad(es) Económica(s):'] ?? [];
         $cp->cpPago = $items['Comprobantes de Pago c/aut. de impresión (F. 806 u 816):'] ?? [];
         $cp->sistElectronica = $items['Sistema de Emisión Electrónica:'] ?? $items['Sistema de Emision Electronica:'] ?? [];
@@ -65,6 +67,51 @@ class RucParser
         $cp->cpeElectronico = $this->getCpes($items['Comprobantes Electrónicos:'] ?? '');
         $cp->fechaPle = $this->parseDate($items['Afiliado al PLE desde:'] ?? '');
         $cp->padrones = $items['Padrones:'] ?? [];
+        //$cp->trabajadores = $items['trabajadores'] ?? [];
+        //$cp->representantes = $items['representantes'] ?? [];
+
+        $cp->representantes = isset($items['Documento']) ? array_map(function ($row) {
+            return [
+                'tipo_doc' => $row[0] ?? null,
+                'nro_doc' => $row[1] ?? null,
+                'nombre' => $row[2] ?? null,
+                'cargo' => $row[3] ?? null,
+                'fecha_desde' => isset($row[4]) ? $this->parseDate($row[4]) : null,
+            ];
+        }, $items['Documento']) : [];
+        
+        /*
+        $cp->trabajadores = isset($items['Período']) ? array_map(function ($row) {
+            $trabajadores = (int) str_replace([' ', '-'], '', trim($row[1] ?? '0'));
+            $pensionistas = (int) str_replace([' ', '-'], '', trim($row[2] ?? '0'));
+            $prestadores_servicio = (int) str_replace([' ', '-'], '', trim($row[3] ?? '0'));
+            
+            return [
+                'periodo' => trim($row[0] ?? null),
+                'trabajadores' => $trabajadores,
+                'pensionistas' => $pensionistas,
+                'prestadores_servicio' => $prestadores_servicio,
+                'total' => $trabajadores + $pensionistas + $prestadores_servicio,
+            ];
+        }, $items['Período']) : [];
+        */
+
+        $cp->trabajadores = isset($items['Período']) ? array_reduce($items['Período'], function ($reciente, $row) {
+            return (!$reciente || strtotime($row[0]) > strtotime($reciente[0])) ? $row : $reciente;
+        }) : null;
+        
+        if ($cp->trabajadores) {
+            $cp->trabajadores = [
+                'periodo' => trim($cp->trabajadores[0] ?? null),
+                'trabajadores' => str_replace([' ', '-'], 0, trim($cp->trabajadores[1] ?? null)),
+                'pensionistas' => str_replace([' ', '-'], 0, trim($cp->trabajadores[2] ?? null)),
+                'prestadores_servicio' => str_replace([' ', '-'], 0, trim($cp->trabajadores[3] ?? null)),
+            ];
+            $cp->trabajadores['total'] = $cp->trabajadores['trabajadores'] + $cp->trabajadores['pensionistas'] + $cp->trabajadores['prestadores_servicio'];
+        }else{
+            $cp->trabajadores = [];
+        }
+        
 
         $this->fixDirection($cp);
 
@@ -107,7 +154,8 @@ class RucParser
 
         $date = DateTime::createFromFormat('d/m/Y', $text);
 
-        return false === $date ? null : $date->format('Y-m-d').'T00:00:00.000Z';
+        //return false === $date ? null : $date->format('Y-m-d').'T00:00:00.000Z';
+        return false === $date ? null : $date->format('Y-m-d');
     }
 
     private function getFirstLine(string $text): string
@@ -129,7 +177,7 @@ class RucParser
         $updateFechaBaja = count($validLines) === 3 && $company->fechaBaja === null;
 
         $company->estado = $validLines[0];
-        $company->fechaBaja = $updateFechaBaja ? $this->parseDate($validLines[2]): $company->fechaBaja;
+        $company->fechaBaja = $updateFechaBaja ? $this->parseDate($validLines[2]) : $company->fechaBaja;
     }
 
     private function filterValidLines(array $lines): Generator
@@ -139,7 +187,7 @@ class RucParser
             if ($value === '') {
                 continue;
             }
-           yield $value;
+            yield $value;
         }
     }
 

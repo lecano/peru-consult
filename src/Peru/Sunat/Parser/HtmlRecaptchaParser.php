@@ -22,15 +22,55 @@ class HtmlRecaptchaParser implements HtmlParserInterface
     public function parse(string $html)
     {
         $xp = XpathLoader::getXpathFromHtml($html);
-        $table = $xp->query("//div[contains(concat(' ', normalize-space(@class), ' '), ' list-group ')]");
 
-        if (0 == $table->length) {
-            return false;
+        // Procesar las tablas con claves en el encabezado
+        $dic = [];
+
+        // Procesar tablas con claves en el encabezado
+        $tables = $xp->query("//div[contains(concat(' ', normalize-space(@class), ' '), ' table-responsive ')]");
+        foreach ($tables as $table) {
+            $dic = array_merge($dic, $this->parseTable($xp, $table));
         }
 
-        $nodes = $table->item(0)->childNodes;
+        // Procesar tablas con claves en el lado
+        $tableNodes = $xp->query("//div[contains(concat(' ', normalize-space(@class), ' '), ' list-group ')]");
+        if (0 == $tableNodes->length) {
+            return $dic;
+        }
 
-        return $this->getKeyValues($nodes, $xp);
+        foreach ($tableNodes as $tableNode) {
+            $nodes = $tableNode->childNodes;
+            $dic = array_merge($dic, $this->getKeyValues($nodes, $xp));
+        }
+
+        return $dic;
+    }
+
+    private function parseTable(DOMXPath $xp, DOMNode $tableNode): array
+    {
+        $dic = [];
+
+        $headers = $xp->query(".//thead/tr/th", $tableNode);
+        $rows = $xp->query(".//tbody/tr", $tableNode);
+
+        foreach ($rows as $row) {
+            $cells = $xp->query(".//td", $row);
+
+            if ($headers->length > 0 && $cells->length > 0) {
+                $key = trim($headers->item(0)->textContent);
+                $values = [];
+
+                foreach ($cells as $cell) {
+                    $values[] = trim($cell->textContent);
+                }
+
+                // Aquí asumimos que cada fila corresponde a un período o categoría
+                // Ajusta la lógica según la estructura específica de tus datos
+                $dic[$key][] = $values;
+            }
+        }
+
+        return $dic;
     }
 
     private function getKeyValues(DOMNodeList $nodes, DOMXPath $xp): array

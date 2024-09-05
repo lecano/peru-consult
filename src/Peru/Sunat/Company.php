@@ -64,6 +64,10 @@ class Company
     /**
      * @var string
      */
+    public $fechaIniActividades;
+    /**
+     * @var string
+     */
     public $sistEmsion;
     /**
      * @var string
@@ -109,4 +113,12 @@ class Company
      * @var string
      */
     public $profesion;
+    /**
+     * @var array
+     */
+    public $trabajadores;
+    /**
+     * @var array
+     */
+    public $representantes;
 }
