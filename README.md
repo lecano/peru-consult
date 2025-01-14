@@ -1,9 +1,9 @@
 # Peru Consultas
 
 ## Install
-Usando composer desde [packagist.org](https://packagist.org/packages/giansalex/peru-consult)
+Usando composer desde [packagist.org](https://packagist.org/packages/lecano/peru-consult)
 ```bash
-composer require giansalex/peru-consult
+composer require lecano/peru-consult
 ```
 
 ### Requerimientos
