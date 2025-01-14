@@ -7,10 +7,9 @@ composer require giansalex/peru-consult
 ```
 
 ### Requerimientos
-- PHP 7.1 o superior.
+- PHP 8.0 o superior.
 - Extensión `curl`
 
 ### Servicios Disponibles
-- Consulta de DNI
 - Consulta de RUC
 - Validez de Usuario SOL (extra)
