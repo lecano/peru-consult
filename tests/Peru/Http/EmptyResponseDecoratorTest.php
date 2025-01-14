@@ -14,7 +14,7 @@ class EmptyResponseDecoratorTest extends TestCase
      * @var EmptyResponseDecorator
      */
     private $client;
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->client = new EmptyResponseDecorator($this->createClient());
     }

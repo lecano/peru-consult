@@ -1,12 +1,9 @@
 {
-    "name": "giansalex/peru-consult",
-    "description": "Consulta gratuita de DNI, RUC en Perú",
+    "name": "lecano/peru-consult",
+    "description": "Consulta gratuita de RUC en Perú",
     "keywords": [
         "sunat",
-        "reniec",
-        "dni",
         "ruc",
-        "consulta-dni",
         "consulta-ruc",
         "peru"
     ],
@@ -15,27 +12,31 @@
         {
             "name": "Giancarlos Salas",
             "email": "giansalex@gmail.com"
+        },
+        {
+            "name": "Luis Cano",
+            "email": "luecano@gmail.com"
         }
     ],
-    "homepage": "https://github.com/giansalex/peru-consult",
+    "homepage": "https://github.com/lecano/peru-consult",
     "type": "library",
     "require": {
-        "php": ">=7.1",
+        "php": ">=8.0",
         "ext-json": "*",
         "ext-dom": "*",
         "ext-libxml": "*",
         "ext-curl": "*"
     },
     "require-dev": {
-        "phpunit/phpunit": "^7",
+        "phpunit/phpunit": "^10.5",
         "behat/behat": "^3.5",
         "clue/block-react": "^1.3",
         "phpstan/phpstan": "^0.12"
     },
     "suggest": {
-        "react/http": "Allow Dni, Ruc async requests"
+        "react/http": "Allow Ruc async requests"
     },
-	"autoload": {
+    "autoload": {
         "psr-4": {
             "Peru\\": "src/Peru/"
         }

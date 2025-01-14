@@ -1,10 +1,12 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Giansalex
  * Date: 01/04/2018
  * Time: 09:33.
  */
+
 declare(strict_types=1);
 
 namespace Tests\Peru\Sunat;
@@ -23,7 +25,7 @@ class UserValidatorTest extends TestCase
      */
     private $validator;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->validator = new UserValidator(new ClientStubDecorator(new CurlClient()));
     }

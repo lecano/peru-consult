@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Giansalex
@@ -27,11 +28,12 @@ class RucTest extends TestCase
      */
     private $cs;
 
-    public function setUp()
+    protected function setUp(): void
     {
         $this->cs = new Ruc(
             new ClientStubDecorator(new EmptyResponseDecorator(new CurlClient())),
-            new RucParser(new HtmlRecaptchaParser()));
+            new RucParser(new HtmlRecaptchaParser())
+        );
     }
 
     /**

@@ -22,7 +22,7 @@ class HttpClientTest extends TestCase
      */
     private $client;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->loop = Factory::create();
         $this->client = new HttpClient($this->loop);
@@ -74,7 +74,7 @@ class HttpClientTest extends TestCase
         await($this->client->postAsync('https://httpbin323.org/post', ''), $this->loop);
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $this->loop->run();
     }
